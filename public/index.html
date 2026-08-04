@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#ffffff">
+<title>Agent HUB · 新机 Agent 部署中心</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛠️</text></svg>">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header id="topbar">
+  <div class="brand" onclick="router.go('#/')">
+    <span class="brand-dot"></span>
+    <span class="brand-name">Agent <b>HUB</b></span>
+    <span class="brand-sub">新机 Agent 部署中心</span>
+  </div>
+  <nav class="topnav">
+    <a class="navlink" data-route="#/" href="#/">目录</a>
+    <a class="navlink" data-route="#/workbench" href="#/workbench">部署工作台</a>
+    <a class="navlink" data-route="#/export" href="#/export">配置导出</a>
+  </nav>
+</header>
+
+<main id="view"></main>
+
+<footer id="footer">
+  <p>Agent HUB · 纯静态 PWA · 所有脚本在本地生成，不上传任何数据 · <a href="#/export">密钥安全说明</a></p>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>

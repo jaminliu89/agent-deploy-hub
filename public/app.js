@@ -86,6 +86,12 @@ async function render() {
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const platformPills = (a) => a.platforms.map(p => `<span class="pill ${p === "macos" ? "mac" : "win"}">${p === "macos" ? "macOS" : "Win"}</span>`).join(" ");
 const selOf = (id) => (store.sel[id] || { bundles: ["cli"] });
+/* 链接防呆：非 http(s) 协议的一律不渲染成链接，避免相对路径 404 */
+const safeLink = (href, text, cls) => {
+  const u = String(href || "").trim();
+  if (/^https?:\/\//i.test(u)) return `<a class="${cls || ""}" href="${esc(u)}" target="_blank" rel="noopener">${esc(text)} ↗</a>`;
+  return `<span class="bad-link">${esc(text)}（链接待完善）</span>`;
+};
 
 /* ---------- 首页 ---------- */
 function homeView() {
@@ -155,7 +161,7 @@ function agentView(id) {
 
   const bigAssets = (a.install.bigAssets || []).map(x => `
     <tr><td>${esc(x.name)}</td><td>${esc(x.size)}</td>
-    <td>${x.official ? `<a href="${esc(x.official)}" target="_blank" rel="noopener">官方</a>` : "—"}</td>
+    <td>${x.official ? safeLink(x.official, "官方") : "—"}</td>
     <td style="font-size:12px;color:var(--muted-fg)">${esc(x.note || "")}</td></tr>`).join("");
 
   const verify = a.verify.map(v => `<li><code class="inline">${esc(v)}</code></li>`).join("");
@@ -166,7 +172,7 @@ function agentView(id) {
   const officialLinks = [
     a.homepage ? ["官网/仓库", a.homepage] : null,
     a.docs ? ["文档", a.docs] : null,
-  ].filter(Boolean).map(([t, u]) => `<a class="btn sm" href="${esc(u)}" target="_blank" rel="noopener">${esc(t)} ↗</a>`).join(" ");
+  ].filter(Boolean).map(([t, u]) => safeLink(u, t, "btn sm")).join(" ");
 
   const newbie = store.newbieGuide ? `<div class="alert"><div><div class="t">🆕 新手提示</div><div class="d">${esc(store.newbieGuide)}</div></div></div>` : "";
 
@@ -196,7 +202,7 @@ function agentView(id) {
     ${a.desktop && a.desktop.available ? `
     <div class="card"><h3>桌面版</h3>
       <p style="font-size:14px;color:var(--muted-fg)">${esc(a.desktop.notes || "")}</p>
-      ${a.desktop.official ? `<p style="margin-top:8px"><a class="btn primary" href="${esc(a.desktop.official)}" target="_blank" rel="noopener">官方下载页 ↗</a></p>` : ""}
+      ${a.desktop.official ? `<p style="margin-top:8px">${safeLink(a.desktop.official, "官方下载页", "btn primary")}</p>` : ""}
       ${guide}
     </div>` : ""}
 

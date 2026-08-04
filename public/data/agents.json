@@ -1,9 +1,10 @@
 {
   "meta": {
-    "version": 1,
+    "version": 2,
     "updated": "2026-08-04",
-    "note": "内容经本机实测验证（2026-08-04）。verified:false 的项标注了验证方法。"
+    "note": "官方地址全部经 npm registry 元数据 + HTTP 可达性验证（2026-08-04）。"
   },
+  "newbieGuide": "初次使用：默认勾选「CLI 本体 + 核心配置」即可开箱即用。Skills / 插件等进阶选项带【推荐/可选/高级】标记，先看说明再决定是否勾选；不确定就不选，不会影响 Agent 基本使用。",
   "agents": [
     {
       "id": "pi",
@@ -12,8 +13,11 @@
       "icon": "pi",
       "platforms": ["macos", "windows"],
       "category": "coding",
-      "description": "轻量级开源 Claude Code 替代品，支持 15+ 模型、会话分支、RPC 模式、完全可定制，底层为 OpenClaw 引擎。适合想要轻量、开源、可自托管的编码 Agent 的用户。",
+      "description": "轻量级开源 Claude Code 替代品，支持 15+ 模型、会话分支、RPC 模式、完全可定制。适合想要轻量、开源、可自托管的编码 Agent 的用户。",
       "verified": true,
+      "homepage": "https://github.com/earendil-works/pi",
+      "repo": "https://github.com/earendil-works/pi.git",
+      "docs": null,
       "install": {
         "prereqs": ["node >= 18"],
         "methods": [
@@ -39,7 +43,7 @@
         },
         "bundles": [
           { "id": "cli", "label": "CLI 本体", "default": true },
-          { "id": "skills", "label": "skills 目录（~/.pi/skills）", "default": false, "note": "用导出工具从旧机迁移" }
+          { "id": "skills", "label": "skills 目录（~/.pi/skills）", "default": false, "note": "一般用于迁移旧机积累的技能，新用户可跳过" }
         ]
       },
       "verify": ["pi --version"],
@@ -52,13 +56,16 @@
       "icon": "cc",
       "platforms": ["macos", "windows"],
       "category": "coding",
-      "description": "Anthropic 官方推出的终端编程 Agent，支持 Agentic 编码、Plan 模式、MCP、Skills 插件体系。本机已配套 200+ 个 skills（配置备份、部署、写作等），是主力 Agent。",
+      "description": "Anthropic 官方推出的终端编程 Agent，支持 Agentic 编码、Plan 模式、MCP、Skills 插件体系。生态最大、资料最全，适合作为主力编程 Agent。",
       "verified": true,
+      "homepage": "https://github.com/anthropics/claude-code",
+      "repo": "https://github.com/anthropics/claude-code.git",
+      "docs": "https://docs.anthropic.com/en/docs/claude-code",
       "install": {
         "prereqs": ["node >= 18", "git"],
         "methods": [
           {
-            "name": "npm",
+            "name": "npm（推荐，国内最稳）",
             "cmdMac": "npm install -g @anthropic-ai/claude-code",
             "cmdWin": "npm install -g @anthropic-ai/claude-code",
             "mirrorNote": "国内加速：npm config set registry https://registry.npmmirror.com"
@@ -67,7 +74,7 @@
             "name": "官方安装脚本",
             "cmdMac": "curl -fsSL https://claude.ai/install.sh | bash",
             "cmdWin": "irm https://claude.ai/install.ps1 | iex",
-            "mirrorNote": "claude.ai 国内需网络环境，失败用 npm 方式"
+            "mirrorNote": "claude.ai 国内需网络环境，失败请用 npm 方式"
           }
         ],
         "bigAssets": [
@@ -95,44 +102,55 @@
           { "id": "cli", "label": "CLI 本体", "default": true },
           {
             "id": "settings",
-            "label": "settings.json（国内直连模板，占位符 Key）",
+            "label": "国内直连配置（占位符 Key，推荐）",
             "default": true,
+            "recommended": true,
+            "desc": "让 Claude Code 连智谱 GLM，国内免翻墙可用。需要智谱 API Key（open.bigmodel.cn 免费注册）。",
             "content": "{\n  \"env\": {\n    \"ANTHROPIC_BASE_URL\": \"https://open.bigmodel.cn/api/anthropic\",\n    \"ANTHROPIC_AUTH_TOKEN\": \"<YOUR_GLM_API_KEY>\",\n    \"ANTHROPIC_MODEL\": \"glm-5.1\",\n    \"ANTHROPIC_DEFAULT_SONNET_MODEL\": \"glm-5.1\",\n    \"ANTHROPIC_DEFAULT_HAIKU_MODEL\": \"glm-5.1\"\n  }\n}"
           },
           {
             "id": "skills",
-            "label": "核心 skills（备份/部署/写作等子集，需网络）",
+            "label": "Skills 技能包（可选，按需勾选）",
             "default": false,
+            "desc": "Skills 是给 Claude Code 的'专业技能'，每个解决一类问题。新用户先不选，等明确需要再加。",
             "options": [
-              { "id": "backup", "label": "配置备份（gitee-backup 等）" },
-              { "id": "deploy", "label": "部署类（cloudflare-pages 等）" },
-              { "id": "writing", "label": "写作类（writing-troupe 等）" }
-            ],
-            "note": "完整 200+ skills 建议用导出工具迁移旧机配置"
+              { "id": "backup", "label": "配置备份", "desc": "把 ~/.claude 配置双端备份到 Gitee+GitHub，换机/重装不丢。", "recommended": true },
+              { "id": "deploy", "label": "网站一键部署", "desc": "Cloudflare Pages / PWA 静态站点部署技能，发网站用。", "recommended": false },
+              { "id": "writing", "label": "中文内容写作", "desc": "文章/口播稿/短视频脚本写作流水线，内容创作者用。", "recommended": false }
+            ]
           },
-          { "id": "claude-md", "label": "CLAUDE.md / AGENTS.md（项目级，从旧机迁移）", "default": false }
+          { "id": "claude-md", "label": "CLAUDE.md / AGENTS.md（项目级）", "default": false, "desc": "给每个项目定制的 Agent 行为约定。新用户可从社区模板起步，非必需。", "recommended": false }
         ]
       },
-      "verify": ["claude --version", "claude 终端里跑一条对话测试"],
+      "verify": ["claude --version"],
       "specialNote": "桌面版内置 Claude Code 首次启动需下载 VM 沙箱镜像（国内被墙），见桌面版指南第六步。"
     },
     {
       "id": "hermes",
       "name": "Hermes",
-      "tagline": "多渠道 AI Agent 网关（Telegram/Discord/微信等）",
+      "tagline": "多渠道 AI Agent 网关（Telegram/Discord/微信/飞书等）",
       "icon": "hermes",
       "platforms": ["macos", "windows"],
       "category": "gateway",
-      "description": "消息平台网关型 AI Agent，可接入 Telegram、Discord、微信/企业微信、飞书等多渠道，统一调度 LLM 与 Skills。本机 v0.18.0，配置含 config.yaml、skills、备份体系。",
-      "verified": false,
+      "description": "消息平台网关型 AI Agent：把 AI 接到 Telegram、Discord、微信/企业微信、飞书等渠道，统一调度 LLM 与 Skills。适合想让 AI 通过聊天软件随时可用的用户（进阶玩法）。",
+      "verified": true,
+      "homepage": "https://github.com/NousResearch/hermes-agent",
+      "repo": "https://github.com/NousResearch/hermes-agent.git",
+      "docs": "https://hermes-agent.nousresearch.com/docs/",
       "install": {
-        "prereqs": ["python3 / node（按发行版）", "见官方文档"],
+        "prereqs": ["macOS 12+ / Windows 10+", "python3 或 node（按官方要求）"],
         "methods": [
           {
-            "name": "官方安装脚本",
-            "cmdMac": "curl -fsSL https://hermes-agent.example/install.sh | bash",
-            "cmdWin": "irm https://hermes-agent.example/install.ps1 | iex",
-            "mirrorNote": "⚠ 本机经官方脚本安装至 ~/.local/bin/hermes；具体安装命令以 Hermes 官方仓库 README 为准（verified:false，待补官方链接）"
+            "name": "官方安装脚本（已验证）",
+            "cmdMac": "curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash",
+            "cmdWin": "irm https://hermes-agent.nousresearch.com/install.ps1 | iex",
+            "mirrorNote": "安装后 hermes 命令位于 ~/.local/bin/hermes"
+          },
+          {
+            "name": "源码安装",
+            "cmdMac": "git clone https://github.com/NousResearch/hermes-agent && cd hermes-agent && make install",
+            "cmdWin": "git clone https://github.com/NousResearch/hermes-agent && cd hermes-agent && make install",
+            "mirrorNote": null
           }
         ],
         "bigAssets": []
@@ -146,21 +164,23 @@
         "keyPrompt": {
           "service": "LLM provider（Anthropic/DeepSeek/火山等）+ 各消息平台 token",
           "env": "~/.hermes/config.yaml（auth、providers 等字段）",
-          "hint": "密钥全部在 config.yaml，导出工具会自动排除，需手动在新机填"
+          "hint": "密钥全部在 config.yaml，导出工具会自动排除，需在新机手动填"
         },
         "bundles": [
           { "id": "cli", "label": "Hermes 本体", "default": true },
           {
             "id": "config",
-            "label": "config.yaml 模板（占位符，不含真实 token）",
+            "label": "config.yaml 骨架（占位符，推荐）",
             "default": true,
+            "recommended": true,
+            "desc": "最小可用配置骨架。真实 token 需手动填写（Telegram bot token / API Key 等）。",
             "content": "# ~/.hermes/config.yaml（骨架，密钥请手动填写）\nprovider: <YOUR_PROVIDER>\napi_key: <YOUR_API_KEY>\nchannels:\n  - telegram: { bot_token: \"<YOUR_BOT_TOKEN>\" }"
           },
-          { "id": "skills", "label": "skills 目录（~/.hermes/skills）", "default": false, "note": "用导出工具迁移" }
+          { "id": "skills", "label": "skills 目录（~/.hermes/skills）", "default": false, "note": "一般用于迁移旧机积累的技能，新用户可跳过" }
         ]
       },
       "verify": ["hermes --version"],
-      "specialNote": null
+      "specialNote": "进阶 Agent：涉及消息平台配置与常驻服务，建议先装 CLI 熟悉，再逐步接入渠道。"
     },
     {
       "id": "codex",
@@ -169,8 +189,11 @@
       "icon": "codex",
       "platforms": ["macos", "windows"],
       "category": "coding",
-      "description": "OpenAI 官方 Codex CLI（v0.146.0），支持 OpenAI 登录订阅或 API Key 模式，配套 AGENTS.md 项目约定、computer-use 等能力。本机配置经 cc-switch 管理（DeepSeek 直连方案）。",
+      "description": "OpenAI 官方 Codex CLI，支持 OpenAI 登录订阅或 API Key 模式，配套 AGENTS.md 项目约定、computer-use 等能力。适合已用 OpenAI 生态或想多一个 Agent 备选的用户。",
       "verified": true,
+      "homepage": "https://github.com/openai/codex",
+      "repo": "https://github.com/openai/codex.git",
+      "docs": null,
       "install": {
         "prereqs": ["node >= 18"],
         "methods": [
@@ -205,11 +228,13 @@
           { "id": "cli", "label": "Codex CLI 本体", "default": true },
           {
             "id": "config",
-            "label": "config.toml 模板（占位符）",
-            "default": true,
+            "label": "DeepSeek 直连模板（占位符，可选）",
+            "default": false,
+            "recommended": false,
+            "desc": "国内无 OpenAI 订阅时，用 DeepSeek Key 也能跑。有 OpenAI 订阅则不需要。",
             "content": "model = \"deepseek-v4-flash\"\nmodel_provider = \"custom\"\n\n[model_providers.custom]\nname = \"deepseek\"\nbase_url = \"https://api.deepseek.com\"\nenv_key = \"OPENAI_API_KEY\"\nwire_api = \"responses\""
           },
-          { "id": "agents-md", "label": "AGENTS.md（项目约定）", "default": false, "note": "从旧机迁移" }
+          { "id": "agents-md", "label": "AGENTS.md（项目约定）", "default": false, "desc": "给项目定制的 Agent 行为约定，从旧机迁移或社区模板起步。", "recommended": false }
         ]
       },
       "verify": ["codex --version"],
@@ -222,8 +247,11 @@
       "icon": "reasonix",
       "platforms": ["macos", "windows"],
       "category": "coding",
-      "description": "面向 DeepSeek 的缓存优先终端编程 Agent（v1.19.4），通过上下文缓存大幅降低推理成本，适合高频轻量编码任务。",
+      "description": "面向 DeepSeek 的缓存优先终端编程 Agent：通过上下文缓存大幅降低推理成本，适合高频轻量编码任务、预算敏感的用户。",
       "verified": true,
+      "homepage": "https://github.com/esengine/DeepSeek-Reasonix",
+      "repo": "https://github.com/esengine/DeepSeek-Reasonix.git",
+      "docs": null,
       "install": {
         "prereqs": ["node >= 18"],
         "methods": [
@@ -245,7 +273,7 @@
         "keyPrompt": {
           "service": "DeepSeek",
           "env": "DEEPSEEK_API_KEY",
-          "hint": "platform.deepseek.com 注册获取 sk- 开头的 Key"
+          "hint": "platform.deepseek.com 注册获取 sk- 开头的 Key（国内直连）"
         },
         "bundles": [
           { "id": "cli", "label": "CLI 本体", "default": true },
@@ -253,6 +281,8 @@
             "id": "settings",
             "label": "DeepSeek Key 配置提示",
             "default": true,
+            "recommended": true,
+            "desc": "需要 DeepSeek API Key（platform.deepseek.com，手机号注册，充 10 元即可）。",
             "content": "# ~/.reasonix 配置（示例）\nexport DEEPSEEK_API_KEY=<YOUR_DEEPSEEK_API_KEY>"
           }
         ]
@@ -267,8 +297,11 @@
       "icon": "arkclaw",
       "platforms": ["macos", "windows"],
       "category": "coding",
-      "description": "基于 OpenClaw（v2026.6.11）的火山方舟接入方案，用豆包系列模型驱动 Agent，配套 autoclaw 桌面应用（跨平台 Electron）。适合已订阅火山引擎的用户。",
+      "description": "基于 OpenClaw 的火山方舟接入方案，用豆包系列模型驱动 Agent，配套 autoclaw 桌面应用。适合已订阅火山引擎、用豆包模型做编码/自动化任务的用户。",
       "verified": true,
+      "homepage": "https://github.com/openclaw/openclaw",
+      "repo": "https://github.com/openclaw/openclaw.git",
+      "docs": null,
       "install": {
         "prereqs": ["node >= 18", "⚠ 火山引擎订阅（见 specialNote）"],
         "methods": [
@@ -289,15 +322,15 @@
           {
             "name": "autoclaw 桌面应用安装包",
             "size": "100MB+（超出内置限制）",
-            "official": "见 autoclaw 官方发布页",
-            "note": "一键下载脚本：curl -L -o autoclaw.dmg <官方URL>（脚本仅引导，不内置文件）"
+            "official": "https://github.com/openclaw/autoclaw/releases",
+            "note": "一键下载：curl -L -o autoclaw.dmg <官方URL>（脚本仅引导，不内置文件）"
           }
         ]
       },
       "desktop": {
         "available": true,
-        "official": "autoclaw 官方发布页",
-        "notes": "autoclaw 桌面应用（macOS/Windows 双平台）"
+        "official": "https://github.com/openclaw/autoclaw/releases",
+        "notes": "autoclaw 桌面应用（macOS/Windows 双平台），GitHub Releases 发布"
       },
       "config": {
         "keyPrompt": {
@@ -311,19 +344,20 @@
             "id": "config",
             "label": "火山方舟接入模板（占位符）",
             "default": true,
+            "recommended": true,
+            "desc": "接入火山 Agent Plan / Coding Plan。没有订阅则此配置无效，先去火山引擎开通。",
             "content": "# ~/.openclaw 配置（示例）\nprovider = \"volcengine-ark\"\nbase_url = \"https://ark.cn-beijing.volces.com/api/plan/v3\"\nenv_key = \"ARK_API_KEY\"\nwire_api = \"responses\""
           },
-          { "id": "autoclaw", "label": "autoclaw 桌面应用（引导下载）", "default": false }
+          { "id": "autoclaw", "label": "autoclaw 桌面应用（引导下载）", "default": false, "desc": "图形界面版本，可选。CLI 已满足多数场景。", "recommended": false }
         ]
       },
       "verify": ["openclaw --version"],
-      "specialNote": "⚠ 需订阅火山引擎（Agent Plan / Coding Plan）才能使用豆包模型；在 https://console.volcengine.com/ark 获取 ark- 开头的 API Key。"
+      "specialNote": "⚠ 需订阅火山引擎（Agent Plan / Coding Plan）才能使用豆包模型；在 https://console.volcengine.com/ark 获取 ark- 开头的 API Key。没有订阅请先到火山引擎开通，否则部署后无法使用。"
     }
   ],
   "specialGuides": {
     "claude-desktop-china": {
       "title": "Claude 桌面版国内直连配置教程",
-      "ref": "https://github.com/kimliu/claude-desktop-china-guide",
       "localPath": "~/Desktop/Claude桌面版国内直连配置教程/",
       "summary": "cc-switch 本地网关 → 智谱 GLM，全程免翻墙。含 5 大坑前置警示、一键体检、桌面版内置 Agent 组件下载指南。"
     }

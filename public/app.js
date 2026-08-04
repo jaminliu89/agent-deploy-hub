@@ -18,11 +18,30 @@ const ICONS = { pi: "PI", cc: "CC", hermes: "HM", codex: "CX", reasonix: "RX", a
 async function loadData() {
   try {
     const r = await fetch("data/agents.json");
-    store.agents = (await r.json()).agents;
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    const data = await r.json();
+    store.agents = data.agents;
+    store.newbieGuide = data.newbieGuide || null;
+    return true;
   } catch (e) {
     store.agents = [];
     console.error("agents.json 加载失败:", e);
+    return false;
   }
+}
+
+/* ---------- 错误兜底视图 ---------- */
+function errorView(msg) {
+  return `
+    <div class="err-view">
+      <div class="err-icon">⚠️</div>
+      <h2>页面出错了</h2>
+      <p>${esc(msg || "发生了未知错误")}</p>
+      <div style="display:flex;gap:10px;justify-content:center;margin-top:16px">
+        <button class="btn primary" onclick="location.hash='#/'">🏠 回到主页</button>
+        <button class="btn" onclick="location.reload()">🔄 刷新重试</button>
+      </div>
+    </div>`;
 }
 
 /* ---------- 路由 ---------- */
@@ -42,16 +61,25 @@ window.addEventListener("load", async () => { await loadData(); render(); regist
 
 /* ---------- 主渲染 ---------- */
 async function render() {
-  if (!store.agents.length) await loadData();
-  const route = router.current();
-  document.querySelectorAll(".navlink").forEach(a =>
-    a.classList.toggle("active", a.dataset.route === "#/" + route.name || (route.name === "agent" && a.dataset.route === "#/")));
-  const view = $("#view");
-  if (route.name === "home") view.innerHTML = homeView();
-  else if (route.name === "agent") view.innerHTML = agentView(route.id);
-  else if (route.name === "workbench") view.innerHTML = workbenchView();
-  else if (route.name === "export") view.innerHTML = exportView();
-  bind(view);
+  try {
+    if (!store.agents.length && !(await loadData())) {
+      $("#view").innerHTML = errorView("数据加载失败：无法获取 agents.json。请检查网络后刷新，或回到主页。");
+      return;
+    }
+    const route = router.current();
+    document.querySelectorAll(".navlink").forEach(a =>
+      a.classList.toggle("active", a.dataset.route === "#/" + route.name || (route.name === "agent" && a.dataset.route === "#/")));
+    const view = $("#view");
+    if (route.name === "home") view.innerHTML = homeView();
+    else if (route.name === "agent") view.innerHTML = agentView(route.id);
+    else if (route.name === "workbench") view.innerHTML = workbenchView();
+    else if (route.name === "export") view.innerHTML = exportView();
+    else view.innerHTML = errorView("未知的页面地址。");
+    bind(view);
+  } catch (e) {
+    console.error("render 失败:", e);
+    $("#view").innerHTML = errorView("页面渲染出错：" + (e && e.message ? e.message : e));
+  }
 }
 
 /* ---------- 工具 ---------- */
@@ -97,17 +125,20 @@ function filterCards(q) {
 /* ---------- 详情页 ---------- */
 function agentView(id) {
   const a = store.agents.find(x => x.id === id);
-  if (!a) return `<div class="empty">未找到该 Agent。<a href="#/">返回目录</a></div>`;
+  if (!a) return errorView("未找到该 Agent。");
   const sel = selOf(id);
   const bundleItems = a.config.bundles.map((b, i) => {
     const checked = sel.bundles.includes(b.id);
     const subs = b.options ? b.options.map(o =>
-      `<label><input type="checkbox" data-sub="${b.id}:${o.id}" ${(sel.subOptions || []).includes(o.id) ? "checked" : ""}> ${esc(o.label)}</label>`).join("") : "";
+      `<label title="${esc(o.desc || "")}"><input type="checkbox" data-sub="${b.id}:${o.id}" ${(sel.subOptions || []).includes(o.id) ? "checked" : ""}> ${esc(o.label)}
+        ${o.recommended ? `<span class="rec-badge">推荐</span>` : ""}
+        <span class="sub-desc">${esc(o.desc || "")}</span></label>`).join("") : "";
     return `
       <div class="bundle-item ${checked ? "checked" : ""}" onclick="toggleBundle('${a.id}','${b.id}', event)">
         <input type="checkbox" ${checked ? "checked" : ""} readonly>
         <div>
-          <div class="bi-title">${esc(b.label)}</div>
+          <div class="bi-title">${esc(b.label)} ${b.recommended ? `<span class="rec-badge">推荐</span>` : ""}</div>
+          ${b.desc ? `<div class="bi-desc">${esc(b.desc)}</div>` : ""}
           ${b.note ? `<div class="bi-desc">${esc(b.note)}</div>` : ""}
           ${subs ? `<div class="sub-options" onclick="event.stopPropagation()">${subs}</div>` : ""}
         </div>
@@ -130,7 +161,14 @@ function agentView(id) {
   const verify = a.verify.map(v => `<li><code class="inline">${esc(v)}</code></li>`).join("");
 
   const guide = a.desktop && a.desktop.chinaGuideRef ? `<div class="alert alert-ok"><div><div class="t">📖 桌面版配置指南</div>
-    <div class="d">${esc(a.desktop.notes || "")} · <a href="#/export" onclick="return false" style="cursor:help">引用既有教程：Claude 桌面版国内直连配置</a></div></div></div>` : "";
+    <div class="d">${esc(a.desktop.notes || "")} · 引用既有教程：Claude 桌面版国内直连配置</div></div></div>` : "";
+
+  const officialLinks = [
+    a.homepage ? ["官网/仓库", a.homepage] : null,
+    a.docs ? ["文档", a.docs] : null,
+  ].filter(Boolean).map(([t, u]) => `<a class="btn sm" href="${esc(u)}" target="_blank" rel="noopener">${esc(t)} ↗</a>`).join(" ");
+
+  const newbie = store.newbieGuide ? `<div class="alert"><div><div class="t">🆕 新手提示</div><div class="d">${esc(store.newbieGuide)}</div></div></div>` : "";
 
   return `
     <div class="view-head">
@@ -140,6 +178,10 @@ function agentView(id) {
     </div>
 
     ${a.specialNote ? `<div class="alert alert-warn"><div><div class="t">⚠ 重要提示</div><div class="d">${esc(a.specialNote)}</div></div></div>` : ""}
+
+    ${newbie}
+
+    ${officialLinks ? `<div class="card" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><h3 style="margin:0;margin-right:6px">官方地址</h3>${officialLinks}</div>` : ""}
 
     <div class="card"><h3>简介</h3><p style="font-size:14px;color:var(--muted-fg)">${esc(a.description)}</p>
       ${a.verified ? "" : `<p style="font-size:12px;color:var(--warning);margin-top:6px">⚠ 部分安装信息待官方确认（verified:false）</p>`}

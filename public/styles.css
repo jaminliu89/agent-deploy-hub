@@ -105,6 +105,19 @@ a:hover { text-decoration: underline; }
 #installBar .ib-text { font-size: 13.5px; }
 #installBar .ib-text b { color: var(--claude); }
 
+/* ===== 线上地址条 ===== */
+.site-url {
+  display: inline-flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg);
+  padding: 10px 16px; box-shadow: var(--shadow-sm); font-size: 13.5px;
+}
+.site-url .su-label { color: var(--muted-fg); font-size: 12px; }
+.site-url a {
+  font-family: var(--mono); font-size: 13.5px; color: var(--claude); font-weight: 600;
+  word-break: break-all;
+}
+.site-url .copy-btn { position: static; margin-left: 2px; }
+
 /* Layout */
 #view { flex: 1; max-width: 1120px; width: 100%; margin: 0 auto; padding: 28px 24px 60px; }
 #footer { border-top: 1px solid var(--border); padding: 18px 24px; text-align: center; color: var(--muted-fg); font-size: 12.5px; }

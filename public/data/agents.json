@@ -2,6 +2,7 @@
   "meta": {
     "version": 2,
     "updated": "2026-08-04",
+    "siteUrl": "https://agent-hub-4re.pages.dev",
     "note": "官方地址全部经 npm registry 元数据 + HTTP 可达性验证（2026-08-04）。"
   },
   "newbieGuide": "初次使用：默认勾选「CLI 本体 + 核心配置」即可开箱即用。Skills / 插件等进阶选项带【推荐/可选/高级】标记，先看说明再决定是否勾选；不确定就不选，不会影响 Agent 基本使用。",

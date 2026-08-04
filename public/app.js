@@ -29,6 +29,7 @@ async function loadData() {
     const data = await r.json();
     store.agents = data.agents;
     store.newbieGuide = data.newbieGuide || null;
+    store.siteUrl = data.meta && data.meta.siteUrl || null;
     initSelection();
     return true;
   } catch (e) {
@@ -143,6 +144,12 @@ function homeView() {
     <section class="hero">
       <h1>新机 Agent 部署中心</h1>
       <p>选择要部署的 AI Coding Agent 与可选配置，一键生成部署脚本。支持 macOS / Windows，全部在本地生成，不上传任何数据。</p>
+      ${store.siteUrl ? `
+      <div class="site-url">
+        <span class="su-label">🌐 线上地址</span>
+        <a href="${esc(store.siteUrl)}" target="_blank" rel="noopener">${esc(store.siteUrl)}</a>
+        <button class="copy-btn" onclick="copyText(this,'${esc(store.siteUrl)}')">复制</button>
+      </div>` : ""}
       <div class="stats">
         <span class="stat"><b>${store.agents.length}</b> 个 Agent</span>
         <span class="stat"><b>${store.agents.filter(a => a.desktop && a.desktop.available).length}</b> 个有桌面版</span>

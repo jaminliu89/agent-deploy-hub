@@ -9,10 +9,17 @@ const $ = (sel) => document.querySelector(sel);
 /* ---------- 状态 ---------- */
 const store = {
   agents: [],
+  newbieGuide: null,
   sel: JSON.parse(localStorage.getItem("agent-hub-sel") || "{}"), // {agentId: {bundleIds:[], subOptions:{}}}
+  settings: Object.assign(
+    { platform: "bash", scope: "recommended", theme: "light" },
+    JSON.parse(localStorage.getItem("agent-hub-settings") || "{}")
+  ),
   save() { localStorage.setItem("agent-hub-sel", JSON.stringify(this.sel)); },
+  saveSettings() { localStorage.setItem("agent-hub-settings", JSON.stringify(this.settings)); document.body.dataset.theme = this.settings.theme; },
 };
 const ICONS = { pi: "PI", cc: "CC", hermes: "HM", codex: "CX", reasonix: "RX", arkclaw: "AK" };
+let deferredPrompt = null; // PWA 安装
 
 /* ---------- 数据加载 ---------- */
 async function loadData() {
@@ -22,12 +29,29 @@ async function loadData() {
     const data = await r.json();
     store.agents = data.agents;
     store.newbieGuide = data.newbieGuide || null;
+    initSelection();
     return true;
   } catch (e) {
     store.agents = [];
     console.error("agents.json 加载失败:", e);
     return false;
   }
+}
+
+/* ---------- 按设置初始化勾选范围（仅首次，未手动选择过时） ---------- */
+function initSelection() {
+  if (Object.keys(store.sel).length) return;
+  const scope = store.settings.scope; // cli | recommended | all
+  store.agents.forEach(a => {
+    const sel = { bundles: [], subOptions: [] };
+    a.config.bundles.forEach(b => {
+      const want = scope === "all" ? true : scope === "cli" ? b.id === "cli" : b.id === "cli" || b.recommended;
+      if (want) sel.bundles.push(b.id);
+      if (scope === "all" && b.options) sel.subOptions.push(...b.options.map(o => o.id));
+    });
+    if (sel.bundles.length) store.sel[a.id] = sel;
+  });
+  store.save();
 }
 
 /* ---------- 错误兜底视图 ---------- */
@@ -57,7 +81,10 @@ const router = {
 };
 
 window.addEventListener("hashchange", render);
-window.addEventListener("load", async () => { await loadData(); render(); registerSW(); });
+window.addEventListener("load", async () => {
+  document.body.dataset.theme = store.settings.theme;
+  await loadData(); render(); registerSW();
+});
 
 /* ---------- 主渲染 ---------- */
 async function render() {
@@ -108,6 +135,11 @@ function homeView() {
       </div>
     </div>`).join("");
   return `
+    ${deferredPrompt ? `
+    <div id="installBar" class="show">
+      <div class="ib-text"><b>📲 安装 Agent HUB 到本机</b> · 离线可用、像原生应用一样打开</div>
+      <button class="btn primary sm" onclick="installApp()">安装</button>
+    </div>` : ""}
     <section class="hero">
       <h1>新机 Agent 部署中心</h1>
       <p>选择要部署的 AI Coding Agent 与可选配置，一键生成部署脚本。支持 macOS / Windows，全部在本地生成，不上传任何数据。</p>
@@ -303,6 +335,9 @@ function exportView() {
 
 /* ---------- 事件绑定 ---------- */
 function bind(view) {
+  // 设置按钮
+  const sb = $("#settingsBtn");
+  if (sb) sb.onclick = openSettings;
   // 详情页：勾选触发脚本重生成
   if (router.current().name === "agent") {
     const id = router.current().id;
@@ -315,8 +350,89 @@ function bind(view) {
       c.addEventListener("change", () => { wbSync(); renderWB(); }));
     document.querySelectorAll("[data-wb-bundle]").forEach(c =>
       c.addEventListener("change", () => { wbSync(); renderWB(); }));
+    // 默认平台 tab
+    const wantPs1 = store.settings.platform === "ps1";
+    document.querySelectorAll(".tab-btn").forEach(t =>
+      t.classList.toggle("active", t.textContent.includes(wantPs1 ? "Windows" : "macOS")));
     wbSync(); renderWB();
   }
+}
+
+/* ---------- 设置弹窗 ---------- */
+function openSettings() {
+  const s = store.settings;
+  const radio = (name, val, label, active) =>
+    `<button class="radio-btn ${active ? "active" : ""}" data-set="${name}" data-val="${val}">${label}</button>`;
+  const modal = document.createElement("div");
+  modal.className = "modal-overlay";
+  modal.innerHTML = `
+    <div class="modal">
+      <div class="modal-head"><h2>⚙️ 设置</h2><button class="modal-close" onclick="closeSettings()">✕</button></div>
+      <div class="modal-body">
+        <div class="setting-group">
+          <div class="setting-label">默认脚本平台</div>
+          <div class="radio-row">
+            ${radio("platform", "bash", "🍎 macOS · bash", s.platform === "bash")}
+            ${radio("platform", "ps1", "🪟 Windows · PowerShell", s.platform === "ps1")}
+          </div>
+          <div class="setting-hint">详情页与工作台的脚本默认显示对应平台。可随时在页面切换。</div>
+        </div>
+        <div class="setting-group">
+          <div class="setting-label">默认勾选范围（新用户友好度）</div>
+          <div class="radio-row">
+            ${radio("scope", "cli", "仅 CLI 本体", s.scope === "cli")}
+            ${radio("scope", "recommended", "CLI + 推荐配置", s.scope === "recommended")}
+            ${radio("scope", "all", "全部勾选", s.scope === "all")}
+          </div>
+          <div class="setting-hint">用于工作台默认勾选。修改后点下方「重置选择」生效。</div>
+        </div>
+        <div class="setting-group">
+          <div class="setting-label">主题</div>
+          <div class="radio-row">
+            ${radio("theme", "light", "☀️ 浅色", s.theme === "light")}
+            ${radio("theme", "dark", "🌙 深色", s.theme === "dark")}
+          </div>
+        </div>
+        <div class="setting-group">
+          <div class="setting-label">本机数据</div>
+          <button class="btn sm" onclick="clearLocalData()">🗑 重置勾选与设置</button>
+          <div class="setting-hint">仅清除浏览器本地保存的偏好，不影响网站内容。</div>
+        </div>
+      </div>
+      <div class="modal-footer"><button class="btn primary" onclick="closeSettings()">完成</button></div>
+    </div>`;
+  document.body.appendChild(modal);
+  modal.querySelectorAll(".radio-btn").forEach(b =>
+    b.addEventListener("click", () => {
+      const name = b.dataset.set;
+      modal.querySelectorAll(`.radio-btn[data-set="${name}"]`).forEach(x => x.classList.remove("active"));
+      b.classList.add("active");
+      store.settings[name] = b.dataset.val;
+      store.saveSettings();
+      if (name === "theme") document.body.dataset.theme = store.settings.theme;
+    }));
+}
+
+function closeSettings() { document.querySelector(".modal-overlay")?.remove(); }
+function clearLocalData() {
+  if (!confirm("确定清除本地勾选与设置吗？")) return;
+  localStorage.removeItem("agent-hub-sel");
+  localStorage.removeItem("agent-hub-settings");
+  location.reload();
+}
+
+/* ---------- PWA 安装 ---------- */
+window.addEventListener("beforeinstallprompt", (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  if (router.current().name === "home") render();
+});
+async function installApp() {
+  if (!deferredPrompt) { alert("当前浏览器不支持安装，或已安装。请用 Chrome/Edge 打开本站。"); return; }
+  deferredPrompt.prompt();
+  await deferredPrompt.userChoice;
+  deferredPrompt = null;
+  render();
 }
 
 /* ---------- 勾选状态 ---------- */
@@ -354,7 +470,7 @@ function renderWB() {
   const ids = [...document.querySelectorAll("[data-wb-agent]:checked")].map(c => c.dataset.wbAgent);
   const out = $("#wb-out"); const check = $("#wb-check");
   if (!out) return;
-  out.textContent = buildDeployScript(ids, "bash");
+  out.textContent = buildDeployScript(ids, store.settings.platform);
   const verifies = ids.flatMap(id => {
     const a = store.agents.find(x => x.id === id);
     return (a ? a.verify : []).map(v => `<li><b>${esc(a.name)}</b>：<code class="inline">${esc(v)}</code></li>`);
@@ -486,20 +602,24 @@ function renderScript(agentId) {
   if (!out) return;
   const a = store.agents.find(x => x.id === agentId);
   if (!a) return;
-  const activeTab = document.querySelector("#gen-out").closest(".card").querySelector(".tab-btn.active");
-  const os = activeTab && activeTab.textContent.includes("Windows") ? "ps1" : "bash";
+  const os = store.settings.platform === "ps1" ? "ps1" : "bash";
+  // 同步激活对应 tab
+  const tabs = out.closest(".card").querySelectorAll(".tab-btn");
+  tabs.forEach(t => t.classList.toggle("active", t.textContent.includes(os === "ps1" ? "Windows" : "macOS")));
   out.textContent = buildAgentScript(a, os);
 }
 
 function switchTab(btn, target) {
   btn.parentElement.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
   btn.classList.add("active");
+  store.settings.platform = (target === "ps1" || target === "wb-ps1") ? "ps1" : "bash";
+  store.saveSettings();
   // 重新生成当前所在视图的脚本
   const r = router.current();
   if (r.name === "agent") renderScript(r.id);
   else if (r.name === "workbench") {
     const ids = [...document.querySelectorAll("[data-wb-agent]:checked")].map(c => c.dataset.wbAgent);
-    $("#wb-out").textContent = buildDeployScript(ids, target === "wb-ps1" ? "ps1" : "bash");
+    $("#wb-out").textContent = buildDeployScript(ids, store.settings.platform);
   }
 }
 

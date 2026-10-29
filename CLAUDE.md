@@ -12,10 +12,11 @@
 - 纯静态 PWA，无构建步骤，`public/` 直接发 Cloudflare Pages
 - >20MB 资产不内置，走 `bigAssets` 引导下载
 - 密钥永不入库（占位符 + 交互输入）
-- 6 个 agent：PI / Claude Code / Hermes / Codex / Reasonix / arkclaw
+- 12 个 agent：PI / Claude Code / Hermes / Codex / Reasonix / arkclaw / WorkBuddy AI / OpenCode / Kiro / Cursor / OpenDesign / Grok Build
 - 脚本双平台：bash（macOS）+ PowerShell（Windows）
 
 **变更历史：**
 | 日期 | 变更 | 对象 | 原因 |
 |------|------|------|------|
+| 2026-10-29 | 新增 6 个 agent（WorkBuddy AI/OpenCode/Kiro/Cursor/OpenDesign/Grok Build） | agents.json/app.js/styles.css | 用户要求增加；WorkBuddy 国际版部署经验（v2/update API）实测写入 |
 | 2026-08-04 | 初始构建（spec + harness + 角色定义） | 全部 | 用户拍板提案后开工 M1 |

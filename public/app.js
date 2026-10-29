@@ -18,7 +18,7 @@ const store = {
   save() { localStorage.setItem("agent-hub-sel", JSON.stringify(this.sel)); },
   saveSettings() { localStorage.setItem("agent-hub-settings", JSON.stringify(this.settings)); document.body.dataset.theme = this.settings.theme; },
 };
-const ICONS = { pi: "PI", cc: "CC", hermes: "HM", codex: "CX", reasonix: "RX", arkclaw: "AK" };
+const ICONS = { pi: "PI", cc: "CC", hermes: "HM", codex: "CX", reasonix: "RX", arkclaw: "AK", workbuddy: "WB", opencode: "OC", kiro: "KR", cursor: "CS", "open-design": "OD", grok: "GK" };
 let deferredPrompt = null; // PWA 安装
 
 /* ---------- 数据加载 ---------- */
@@ -515,8 +515,13 @@ function buildAgentScript(agent, os) {
     // install
     const m = agent.install.methods[0];
     L.push("");
-    L.push("say \"安装 ${m.name}...\"");
-    L.push(`command -v ${(agent.verify[0]||"").split(" ")[0].replace("--version","").trim()} >/dev/null 2>&1 && say "已安装，跳过" || run ${m.cmdMac}`);
+    L.push(`say "安装 ${m.name}..."`);
+    const probe = (agent.verify[0] || "").split(" ")[0].replace("--version", "").trim();
+    if (probe && probe !== "ls" && probe !== "echo") {
+      L.push(`command -v ${probe} >/dev/null 2>&1 && say "已安装，跳过" || run ${m.cmdMac}`);
+    } else {
+      L.push(`run ${m.cmdMac}`);
+    }
     // config blocks
     selectedBundles(agent).forEach(b => {
       if (b.content) {
@@ -526,7 +531,7 @@ function buildAgentScript(agent, os) {
         L.push(b.content);
         L.push("EOF");
       }
-      if (b.id === "cli") {
+      if (b.id === "cli" && agent.config.keyPrompt) {
         L.push("");
         L.push('read -rsp "输入 API Key（将写入配置）：" KEY; echo');
         L.push('if [ -n "$KEY" ]; then run echo "export ' + (agent.config.keyPrompt?.env || "API_KEY") + '=$KEY" >> ~/.config/agent-hub/env; fi');

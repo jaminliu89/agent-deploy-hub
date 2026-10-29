@@ -157,6 +157,12 @@ a:hover { text-decoration: underline; }
 .agent-icon.codex { background: linear-gradient(135deg,#22c55e,#15803d); }
 .agent-icon.reasonix { background: linear-gradient(135deg,#8b5cf6,#6d28d9); }
 .agent-icon.arkclaw { background: linear-gradient(135deg,#f59e0b,#b45309); }
+.agent-icon.workbuddy { background: linear-gradient(135deg,#14b8a6,#0f766e); }
+.agent-icon.opencode { background: linear-gradient(135deg,#3b82f6,#1e40af); }
+.agent-icon.kiro { background: linear-gradient(135deg,#a855f7,#7e22ce); }
+.agent-icon.cursor { background: linear-gradient(135deg,#475569,#1e293b); }
+.agent-icon.open-design { background: linear-gradient(135deg,#ec4899,#be185d); }
+.agent-icon.grok { background: linear-gradient(135deg,#f97316,#c2410c); }
 .agent-card h3 { font-size: 15.5px; font-weight: 700; }
 .agent-card .ac-tag { font-size: 12.5px; color: var(--muted-fg); flex: 1; }
 .agent-card .ac-foot { display: flex; align-items: center; justify-content: space-between; }

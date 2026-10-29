@@ -1,9 +1,9 @@
 {
   "meta": {
-    "version": 2,
-    "updated": "2026-08-04",
+    "version": 3,
+    "updated": "2026-10-29",
     "siteUrl": "https://agent-hub-4re.pages.dev",
-    "note": "官方地址全部经 npm registry 元数据 + HTTP 可达性验证（2026-08-04）。"
+    "note": "官方地址全部经 npm registry + HTTP 可达性验证（2026-10-29）。WorkBuddy 国际版部署经验为 2026-10-29 实测；新增 opencode/kiro/cursor/open-design/grok 五个 agent。"
   },
   "newbieGuide": "初次使用：默认勾选「CLI 本体 + 核心配置」即可开箱即用。Skills / 插件等进阶选项带【推荐/可选/高级】标记，先看说明再决定是否勾选；不确定就不选，不会影响 Agent 基本使用。",
   "agents": [
@@ -446,6 +446,344 @@
       "verify": [
         "openclaw --version"
       ]
+    },
+    {
+      "id": "workbuddy",
+      "name": "WorkBuddy AI",
+      "tagline": "腾讯 AI 工作助理 · 国际版（海外版）",
+      "icon": "wb",
+      "platforms": [
+        "macos"
+      ],
+      "category": "assistant",
+      "description": "腾讯推出的 AI 工作助理 WorkBuddy 国际版（WorkBuddy AI，workbuddy.ai）。知识库/笔记/Agent 协作一体。与国内版（workbuddy.cn 客户端 com.tencent.workbuddy.mac）相互独立，可并存安装。",
+      "verified": true,
+      "homepage": "https://www.workbuddy.ai",
+      "repo": null,
+      "docs": "https://www.workbuddy.ai/docs",
+      "install": {
+        "prereqs": [
+          "macOS 11+",
+          "海外网络（登录用 Google/GitHub OAuth）"
+        ],
+        "methods": [
+          {
+            "name": "官方下载 API（2026-10-29 实测）",
+            "cmdMac": "URL=$(curl -s 'https://www.workbuddy.ai/v2/update?platform=workbuddy-darwin-arm64' | python3 -c \"import json,sys;print(json.load(sys.stdin)['url'])\") && curl -L -o ~/Downloads/WorkBuddy-latest.zip \"$URL\" && unzip -q ~/Downloads/WorkBuddy-latest.zip -d ~/Downloads/ && cp -R \"$HOME/Downloads/WorkBuddy AI.app\" /Applications/ && echo '已安装到 /Applications/WorkBuddy AI.app'",
+            "cmdWin": null,
+            "mirrorNote": "Intel Mac 把 platform 换成 workbuddy-darwin-x64；官网下载按钮背后就是这个接口（SPA 无直链）"
+          }
+        ],
+        "bigAssets": []
+      },
+      "desktop": {
+        "available": true,
+        "official": "https://www.workbuddy.ai",
+        "notes": "Electron 桌面客户端，官网页面下载按钮走 /v2/update 接口返回 zip。国际版数据目录 ~/.workbuddy-ai，与国内版 ~/.workbuddy 互不干扰。"
+      },
+      "config": {
+        "keyPrompt": null,
+        "bundles": [
+          {
+            "id": "cli",
+            "label": "客户端安装（下载 zip → 安装到 /Applications）",
+            "default": true
+          }
+        ]
+      },
+      "verify": [
+        "ls /Applications | grep 'WorkBuddy AI'"
+      ],
+      "specialNote": "部署实测经验：① 官网是 SPA，真实下载地址由 /v2/update 接口返回（darwin-arm64 / darwin-x64 已验证，win 平台枚举返回 400 = 暂无 Windows 包）② 接口返回的 sha256 可能与 CDN 实际文件不一致（CDN 更新快于 hash 同步），以 zip 完整性（unzip -t）为准 ③ 安装后 bundle id 为 com.workbuddy.workbuddy-ai，与国内版并存无冲突 ④ 登录需 Google/GitHub OAuth + 海外网络"
+    },
+    {
+      "id": "opencode",
+      "name": "OpenCode",
+      "tagline": "开源 AI 编码 Agent · 终端 / 桌面 / IDE 三端（原 SST OpenCode）",
+      "icon": "oc",
+      "platforms": [
+        "macos",
+        "windows"
+      ],
+      "category": "coding",
+      "description": "OpenCode 是开源 AI 编码 Agent（原 SST/OpenCode，现 anomalyco），提供终端 TUI、桌面应用与 IDE 扩展三种形态。支持 300+ 模型、Agentic 编码、MCP。",
+      "verified": true,
+      "homepage": "https://opencode.ai",
+      "repo": "https://github.com/anomalyco/opencode",
+      "docs": "https://opencode.ai/docs",
+      "install": {
+        "prereqs": [
+          "node >= 18"
+        ],
+        "methods": [
+          {
+            "name": "官方安装脚本（推荐）",
+            "cmdMac": "curl -fsSL https://opencode.ai/v2/install | bash",
+            "cmdWin": "npm install -g @opencode/cli",
+            "mirrorNote": "V1 与 V2 共用 opencode 命令，不能并存；国内 npm 方式最稳"
+          },
+          {
+            "name": "npm",
+            "cmdMac": "npm install -g @opencode/cli",
+            "cmdWin": "npm install -g @opencode/cli",
+            "mirrorNote": "国内加速：npm config set registry https://registry.npmmirror.com"
+          }
+        ],
+        "bigAssets": []
+      },
+      "desktop": {
+        "available": true,
+        "official": "https://opencode.ai/download",
+        "notes": "桌面版（OpenCode Desktop）+ IDE 扩展；纯终端用户装 CLI 即可"
+      },
+      "config": {
+        "keyPrompt": {
+          "service": "任意 OpenAI 兼容 / Anthropic 兼容 API",
+          "env": "OPENAI_API_KEY / ANTHROPIC_API_KEY（按模型）",
+          "hint": "支持 300+ 模型，配置在 ~/.config/opencode/"
+        },
+        "bundles": [
+          {
+            "id": "cli",
+            "label": "CLI 本体",
+            "default": true
+          }
+        ]
+      },
+      "verify": [
+        "opencode --version"
+      ],
+      "specialNote": null
+    },
+    {
+      "id": "kiro",
+      "name": "Kiro",
+      "tagline": "Agentic Engineering · AWS 系 AI IDE + CLI + Crew",
+      "icon": "kr",
+      "platforms": [
+        "macos",
+        "windows"
+      ],
+      "category": "coding",
+      "description": "Kiro（kiro.dev）把 AI 编码推进到 agentic engineering：IDE、CLI、Web、移动端与开源 Crew 五种形态共享一份 .kiro 配置。登录支持 Google / GitHub / AWS Builder ID，不强制 AWS 账号。",
+      "verified": true,
+      "homepage": "https://kiro.dev",
+      "repo": "https://github.com/kirodotdev/KiroCrew",
+      "docs": "https://kiro.dev/docs",
+      "install": {
+        "prereqs": [
+          "CLI: macOS / Windows 11 (PowerShell) / Linux"
+        ],
+        "methods": [
+          {
+            "name": "CLI 官方脚本",
+            "cmdMac": "curl -fsSL https://cli.kiro.dev/install | bash",
+            "cmdWin": null,
+            "mirrorNote": "Windows 官方未提供 PowerShell 一键命令，建议 WSL 安装或下载 IDE；IDE 安装器在 kiro.dev/downloads"
+          }
+        ],
+        "bigAssets": []
+      },
+      "desktop": {
+        "available": true,
+        "official": "https://kiro.dev/downloads",
+        "notes": "IDE 安装器（macOS Apple Silicon dmg / Windows x64）；另有 Web 版 app.kiro.dev"
+      },
+      "config": {
+        "keyPrompt": {
+          "service": "Kiro 账号（Google/GitHub/AWS Builder ID 登录）",
+          "env": "无（浏览器登录）",
+          "hint": "CLI 首次运行浏览器认证；kiro.dev 国内需网络环境"
+        },
+        "bundles": [
+          {
+            "id": "cli",
+            "label": "CLI 本体（命令 kiro-cli）",
+            "default": true
+          }
+        ]
+      },
+      "verify": [
+        "kiro-cli --help"
+      ],
+      "specialNote": "2026-11-09 起 Kiro IDE <0.11.133 / CLI <1.28.2 将无法连接 Kiro 服务，装完记得升级到最新版。"
+    },
+    {
+      "id": "cursor",
+      "name": "Cursor",
+      "tagline": "AI 代码编辑器 + Cursor Agent CLI（终端 / CI 通用）",
+      "icon": "cs",
+      "platforms": [
+        "macos",
+        "windows"
+      ],
+      "category": "coding",
+      "description": "Cursor：AI 原生代码编辑器，含 Cursor Agent CLI——把 Agent 带到终端、GitHub Actions 与自动化脚本，支持 Agent / Plan / Ask 三模式。",
+      "verified": true,
+      "homepage": "https://cursor.com",
+      "repo": null,
+      "docs": "https://cursor.com/docs/cli/overview",
+      "install": {
+        "prereqs": [
+          "macOS / Linux / Windows (WSL)"
+        ],
+        "methods": [
+          {
+            "name": "Cursor CLI 官方脚本",
+            "cmdMac": "curl https://cursor.com/install -fsS | bash",
+            "cmdWin": "irm 'https://cursor.com/install?win32=true' | iex",
+            "mirrorNote": "CLI 命令是 agent（~/.local/bin/agent），不是 cursor；cursor.com 国内需网络环境"
+          },
+          {
+            "name": "桌面版下载",
+            "cmdMac": "open https://cursor.com/download",
+            "cmdWin": "start https://cursor.com/download",
+            "mirrorNote": "dmg / exe 安装器，打开页面即可下载"
+          }
+        ],
+        "bigAssets": []
+      },
+      "desktop": {
+        "available": true,
+        "official": "https://cursor.com/download",
+        "notes": "桌面 IDE（dmg / exe）；CLI 与 IDE 账号互通"
+      },
+      "config": {
+        "keyPrompt": {
+          "service": "Cursor 账号（免费/Pro/Ultra）",
+          "env": "无（登录账号）",
+          "hint": "CLI 首次运行登录 Cursor 账号；国内访问 cursor.com 需网络环境"
+        },
+        "bundles": [
+          {
+            "id": "cli",
+            "label": "Cursor Agent CLI（命令 agent）",
+            "default": true
+          }
+        ]
+      },
+      "verify": [
+        "agent --version"
+      ],
+      "specialNote": "CLI 自动更新；手动更新 agent update。PATH 需含 ~/.local/bin（zsh 用户写进 ~/.zshrc）。"
+    },
+    {
+      "id": "open-design",
+      "name": "OpenDesign",
+      "tagline": "协作式 AI 设计 Agent 工作区 · 开源 Apache 2.0（10万+ stars）",
+      "icon": "od",
+      "platforms": [
+        "macos",
+        "windows"
+      ],
+      "category": "design",
+      "description": "OpenDesign（nexu-io/open-design）：首个协作式 AI 设计 Agent 工作区，本地优先开源。用 brief 起步，通过编码 Agent 生成原型/落地页/仪表盘，内置 100+ 功能 skills、渲染模板目录与 151 套设计系统。支持 Claude Code / Codex / Cursor / OpenCode / Pi / Hermes 等 20+ agent（MCP 接入）。",
+      "verified": true,
+      "homepage": "https://open-design.ai",
+      "repo": "https://github.com/nexu-io/open-design",
+      "docs": "https://open-design.ai/docs",
+      "install": {
+        "prereqs": [
+          "桌面应用：无需 Node；源码运行需 Node 24 + pnpm 10.33.x"
+        ],
+        "methods": [
+          {
+            "name": "一键接入编码 Agent（官方脚本）",
+            "cmdMac": "curl -fsSL https://open-design.ai/install.sh | sh -s claude",
+            "cmdWin": null,
+            "mirrorNote": "<agent> 可换 claude / codex / opencode / cursor / pi / hermes / kimi / kiro 等；等于运行 od mcp install <agent>"
+          },
+          {
+            "name": "源码运行（含 Web UI）",
+            "cmdMac": "git clone https://github.com/nexu-io/open-design && cd open-design && corepack enable && pnpm install && pnpm tools-dev run web",
+            "cmdWin": "git clone https://github.com/nexu-io/open-design && cd open-design && corepack enable && pnpm install && pnpm tools-dev run web",
+            "mirrorNote": "需 Node 24（Node 22 不支持）+ pnpm 10.33.2"
+          }
+        ],
+        "bigAssets": []
+      },
+      "desktop": {
+        "available": true,
+        "official": "https://open-design.ai",
+        "notes": "macOS（Apple Silicon / Intel）与 Windows x64 桌面应用，自动探测 PATH 里的编码 Agent CLI；Linux 需源码运行"
+      },
+      "config": {
+        "keyPrompt": {
+          "service": "本地 agent CLI 或 BYOK API",
+          "env": "无（自动用 PATH 里的 agent；或 Settings 配 BYOK）",
+          "hint": "装完在桌面应用里扫描本机 agent；或直接把它当 MCP server 接进你已装的编码 Agent"
+        },
+        "bundles": [
+          {
+            "id": "cli",
+            "label": "安装进编码 Agent（MCP server）",
+            "default": true
+          }
+        ]
+      },
+      "verify": [
+        "od mcp list"
+      ],
+      "specialNote": "macOS 坑：系统自带 /usr/bin/od（octal dump）会遮蔽 OpenDesign 的 od 命令。桌面应用装完从 Settings → MCP server 复制带绝对路径的接入片段，别用裸 od。"
+    },
+    {
+      "id": "grok",
+      "name": "Grok Build",
+      "tagline": "xAI 官方终端编码 Agent（Grok CLI / Grok Build）",
+      "icon": "gk",
+      "platforms": [
+        "macos",
+        "windows"
+      ],
+      "category": "coding",
+      "description": "xAI 官方 Grok Build：交互式 TUI 编码 Agent，支持 headless 脚本模式（grok -p）、Agent Client Protocol（ACP）、插件市场、MCP 管理、会话导入（可迁入 Claude Code 会话）。",
+      "verified": true,
+      "homepage": "https://docs.x.ai/build/overview",
+      "repo": null,
+      "docs": "https://docs.x.ai/build/cli/reference",
+      "install": {
+        "prereqs": [
+          "macOS / Linux / Windows x64"
+        ],
+        "methods": [
+          {
+            "name": "官方安装脚本",
+            "cmdMac": "curl -fsSL https://x.ai/cli/install.sh | bash",
+            "cmdWin": "irm https://x.ai/cli/install.ps1 | iex",
+            "mirrorNote": "x.ai 国内需网络环境；装完 grok 与 agent 两个入口都在 ~/.grok/bin"
+          },
+          {
+            "name": "npm",
+            "cmdMac": "npm install -g @xai-official/grok",
+            "cmdWin": "npm install -g @xai-official/grok",
+            "mirrorNote": "npm 包当前 1.0.70（2026-10-29 验证），国内更稳"
+          }
+        ],
+        "bigAssets": []
+      },
+      "desktop": {
+        "available": false,
+        "official": null,
+        "notes": "纯 TUI / CLI，无独立桌面版；grok dashboard 打开 Web 面板"
+      },
+      "config": {
+        "keyPrompt": {
+          "service": "xAI 账号或 API Key",
+          "env": "XAI_API_KEY",
+          "hint": "首次运行浏览器认证；无浏览器环境用 grok login --device-auth"
+        },
+        "bundles": [
+          {
+            "id": "cli",
+            "label": "CLI 本体（命令 grok）",
+            "default": true
+          }
+        ]
+      },
+      "verify": [
+        "grok --version"
+      ],
+      "specialNote": null
     }
   ],
   "specialGuides": {
